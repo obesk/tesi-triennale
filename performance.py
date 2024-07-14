@@ -1,6 +1,8 @@
+import os
 import sys
 import time
-import json
+import pickle
+
 
 using_ulab = True
 try:
@@ -84,22 +86,24 @@ def check_all_true(matrix):
 
 def main():
     if (len(sys.argv) >= 2):
-        testfile = sys.argv[1]
+        testfile = f"times/{sys.argv[1]}.csv"
+        resultfile = f"results/{sys.argv[1]}.pkl"
         print(testfile)
     else:
         testfile = f"times/{prefix} times.csv"
-    with open(testfile, "w") as file:
-        file.write("test name,id,time,valid\n")
+    with open(testfile, "w") as test_f:
+        test_f.write("test name,id,time,valid\n")
+        results = {}
         for t in tests:
             n_of_tests = 100
-            results = []
+            results[t["name"]] = []
             for i in range(n_of_tests):
                 result, operation_time = timer(t["fun"], **t.get("kwargs", {}))
-                results.append(convert_to_list(result))
-                file.write(f"{t['name']},{i},{operation_time}\n")
+                results[t["name"]].append(convert_to_list(result))
+                test_f.write(f"{t['name']},{i},{operation_time}\n")
 
-            with open(f"results/{t['name']}.json", "w") as f:
-                json.dump(results, f)
+    with open(resultfile, "wb") as result_f:
+        pickle.dump(results, result_f)
 
 
 def convert_to_list(result):

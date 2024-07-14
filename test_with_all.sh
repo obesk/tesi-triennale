@@ -10,5 +10,5 @@ do
 	FIRMWARE_SIZE=$(du -k "$FIRMWARE" | cut -f1)
 	echo "$FIRMWARE_NAME,$FIRMWARE_SIZE" >> "$SIZE_FILE"
 	# run the same test with all the firmwares
-	./$FIRMWARE -X heapsize=100M performance.py "times/$FIRMWARE_NAME.csv"
+	./$FIRMWARE -X heapsize=100M performance.py "$FIRMWARE_NAME"
 done
