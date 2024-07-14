@@ -1,5 +1,6 @@
 import sys
 import time
+import json
 
 using_ulab = True
 try:
@@ -91,24 +92,23 @@ def main():
         file.write("test name,id,time,valid\n")
         for t in tests:
             n_of_tests = 100
-            result = None
+            results = []
             for i in range(n_of_tests):
-                new_result, operation_time = timer(t["fun"], **t.get("kwargs", {}))
-                if result is None:
-                    result = new_result
-                result_comparison = result == new_result
-                if using_ulab:
-                    if result_comparison == True:
-                        test_valid = True
-                    else:
-                        test_valid = False
-                else:
-                    test_valid = result_comparison.all()
-                # if isinstance(result_comparison, np.ndarray):
-                #     test_valid = check_all_true(result_comparison)
-                # else:
-                #     test_valid = result_comparison
-                file.write(f"{t['name']},{i},{operation_time},{test_valid}\n")
+                result, operation_time = timer(t["fun"], **t.get("kwargs", {}))
+                results.append(convert_to_list(result))
+                file.write(f"{t['name']},{i},{operation_time}\n")
+
+            with open(f"results/{t['name']}.json", "w") as f:
+                json.dump(results, f)
+
+
+def convert_to_list(result):
+    if isinstance(result, np.ndarray):
+        return result.tolist()
+    elif isinstance(result, tuple):
+        return [convert_to_list(item) for item in result]
+    else:
+        return result
 
 if __name__ == "__main__":
     main()
