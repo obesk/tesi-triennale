@@ -1,16 +1,17 @@
 import os
 import sys
 import time
-import pickle
-
 
 using_ulab = True
 try:
     from ulab import numpy as np
     from ulab import scipy
+    import json
+
 except ImportError:
     import numpy as np
     import scipy
+    import pickle
     using_ulab = False
 
 
@@ -76,43 +77,42 @@ tests = [
 ]
 
 
-# ulab doesn't support the all() function
-def check_all_true(matrix):
-    for elem in matrix:
-        print(elem)
-        if not elem:
-            return False
-    return True
-
 def main():
     if (len(sys.argv) >= 2):
         testfile = f"times/{sys.argv[1]}.csv"
         resultfile = f"results/{sys.argv[1]}.pkl"
-        print(testfile)
     else:
         testfile = f"times/{prefix} times.csv"
+    results = {}
     with open(testfile, "w") as test_f:
-        test_f.write("test name,id,time,valid\n")
-        results = {}
+        test_f.write("test name,id,time\n")
         for t in tests:
+            print(f"Running test {t['name']}")
             n_of_tests = 100
-            results[t["name"]] = []
             for i in range(n_of_tests):
                 result, operation_time = timer(t["fun"], **t.get("kwargs", {}))
-                results[t["name"]].append(convert_to_list(result))
+                if i == 0:
+                    results[t["name"]] = convert_to_list(result)
                 test_f.write(f"{t['name']},{i},{operation_time}\n")
 
+    print("Saving results")
     with open(resultfile, "wb") as result_f:
-        pickle.dump(results, result_f)
-
+        if using_ulab:
+            json.dump(results, result_f)
+        else:
+            pickle.dump(results, result_f)
 
 def convert_to_list(result):
     if isinstance(result, np.ndarray):
         return result.tolist()
     elif isinstance(result, tuple):
         return [convert_to_list(item) for item in result]
+    elif isinstance(result, complex):
+        return [result.real, result.imag]
     else:
         return result
+
+
 
 if __name__ == "__main__":
     main()
